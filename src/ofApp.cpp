@@ -75,64 +75,54 @@ void ofApp::setup(){
 
 	/* TCP set up */
 
-	//setupTcpClient();
+	setupTcpClient();
 
 	/* end of TCP set up */
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
-    getHumanFromOSC();
-    
-    int myByte = 0;
-    if(serial.available()){
-        myByte = serial.readByte();
-//        if ( myByte == OF_SERIAL_NO_DATA )
-//            printf("no data was read");
-//        else if ( myByte == OF_SERIAL_ERROR )
-//            printf("an error occurred");
-//        else
-            //printf("myByte is %d \n", myByte);
-      
-        if(myByte <= 36) {
-            int TempBtnID = (myByte+1)/2 ;
-           // int TempBtnID = (myByte);
-            //printf("TempBtn is %d \n", TempBtnID);
-          //  flrBtnPressed(0);
-          //  flrBtnPressed(myByte);
-
-			/* Useful */
-            //flrBtnPressed(TempBtnID);
-
-            //supposedly you should call flrBtnPressed(btnID)
-            
-            //int TempBtnID =
-            //flnBtnPressed(
-        }
-    }
+//    getHumanFromOSC();
+//    
+//    int myByte = 0;
+//    if(serial.available()){
+//        myByte = serial.readByte();
+////        if ( myByte == OF_SERIAL_NO_DATA )
+////            printf("no data was read");
+////        else if ( myByte == OF_SERIAL_ERROR )
+////            printf("an error occurred");
+////        else
+//            //printf("myByte is %d \n", myByte);
+//      
+//        if(myByte <= 36) {
+//            int TempBtnID = (myByte+1)/2 ;
+//           // int TempBtnID = (myByte);
+//            //printf("TempBtn is %d \n", TempBtnID);
+//          //  flrBtnPressed(0);
+//          //  flrBtnPressed(myByte);
+//
+//			/* Useful */
+//            //flrBtnPressed(TempBtnID);
+//
+//            //supposedly you should call flrBtnPressed(btnID)
+//            
+//            //int TempBtnID =
+//            //flnBtnPressed(
+//        }
+//    }
 
 
 	/* tcp */
 
 	if (tcpClient.isConnected()) {
-		string str = tcpClient.receive();
-		if (str.length() > 0) {
-			msgRx = str;
-			cout << "Received JSON: " << msgRx << endl;
-			cout << endl;
+		//cout << "Remarks: TCP connected!" << endl;
+		
+		if (isWaitingForReply) {
+			//cout << "Waiting for reply..." << endl;
+			receiveTcpMsg();
 		}
-
-		str = tcpClient.receive();
-		if (str.length() > 0) {
-			msgRx = str;
-			cout << "Received JSON: " << msgRx << endl;
-			cout << endl;
-		}
-
-
-		//tcpClient.close();
 	}
-	/*else {
+	else {
 		deltaTime = ofGetElapsedTimeMillis() - connectTime;
 		
 		if (deltaTime > reconnectTimeMillis) {
@@ -140,10 +130,11 @@ void ofApp::update(){
 
 			connectTime = ofGetElapsedTimeMillis();
 		}
-	}*/
+	}
 
 	/* end of tcp */
 }
+
 //--------------------------------------------------------------
 void ofApp::draw(){
     
@@ -212,16 +203,12 @@ void ofApp::flrBtnPressed(int btnID){
 
 		/* tcp */
 
-		setupTcpClient();
+		//setupTcpClient();
 		if (tcpClient.isConnected()) {
 			cout << "Remarks: TCP connected!" << endl;
 			tcpClient.send(imgAbsolutePath);
-
-			/*string str = tcpClient.receive();
-			if (str.length() > 0) {
-				msgRx = str;
-				cout << "Received JSON: " << msgRx << endl;
-			}*/
+			cout << "Sent: " << imgAbsolutePath << endl;
+			isWaitingForReply = true;
 		}
 		//tcpClient.close();
 
@@ -419,7 +406,7 @@ void ofApp::drawConnectionsOF(){
 
 
 void ofApp::keyPressed(int key){
-    if(key == '0'){
+    /*if(key == '0'){
         flrBtnPressed(0);
     }else if(key == '1'){
         flrBtnPressed(1);
@@ -433,8 +420,10 @@ void ofApp::keyPressed(int key){
         flrBtnPressed(5);
     }else if(key == '6'){
         flrBtnPressed(6);
-    }
-    
+    }*/
+
+	// https://stackoverflow.com/questions/628761/convert-a-character-digit-to-the-corresponding-integer-in-c
+	flrBtnPressed(key - '0');    
 }
 
 
@@ -444,6 +433,15 @@ void ofApp::keyPressed(int key){
 void ofApp::setupTcpClient() {
 	tcpClient.setup(hostIp, hostPort);
 	tcpClient.setMessageDelimiter(tcpMsgDelimiter);
+}
+
+void ofApp::receiveTcpMsg() {
+	string str = tcpClient.receive();
+	if (str.length() > 0) {
+		msgRx = str;
+		cout << "Received: " << msgRx << endl;
+		isWaitingForReply = false;
+	}
 }
 
 /* end of tcp */

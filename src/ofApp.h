@@ -113,8 +113,9 @@ class ofApp : public ofBaseApp{
 		int connectTime = 0;
 		int deltaTime = 0;
 		string msgRx = "";
+		bool isWaitingForReply = false;
 
 		void setupTcpClient();
-
+		void receiveTcpMsg();
 		/* end of TCP networking */
 };
