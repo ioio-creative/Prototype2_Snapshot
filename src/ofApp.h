@@ -15,6 +15,8 @@
 
 #define camW 1920
 #define camH 1080
+#define windowW 960
+#define windowH 540
 #define btnPerCam 6
 
 #define cropW 1920
@@ -33,7 +35,7 @@
 
 class ofApp : public ofBaseApp{
 
-	public:
+	private:
 		void setup();
 		void update();
 		void draw();
@@ -62,9 +64,9 @@ class ofApp : public ofBaseApp{
         
         //buttons to Cam array [buttonID] i.e.{0,0,0,1,1,1,2,2,2}
         //int btnToCam[totalBtn] = {4,4,4,4,4,0,0,0,0,1,1,1,1,1,2,2,2,2};
-    //int btnToCam[totalBtn] = {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-		int btnToCam[totalBtn] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
-    //int btnToCam2[36]={camDeviceD,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceD,camDeviceD,camDeviceD,camDeviceD,camDeviceD,camDeviceD,camDeviceD};
+		int btnToCam[totalBtn] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+		//int btnToCam[totalBtn] = { 0,0,0,0,0,1,1,1,1,3,3,3,3,3,4,4,4,4 };
+	    //int btnToCam2[36]={camDeviceD,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceD,camDeviceD,camDeviceD,camDeviceD,camDeviceD,camDeviceD,camDeviceD};
         //int btnToCam[totalBtn] ;
         
         //Dimension array [buttonID] = {startPoint0, StartPoint1,...,startPoint17}
@@ -73,36 +75,24 @@ class ofApp : public ofBaseApp{
         
     
         int leftBorder, rightBorder;
-        //rawPhoto, cropPhoto, optPhoto
-        ofImage rawPhoto;
-        ofImage cropPhoto;
-        ofImage optPhoto;
-    
-        //ofxOscSender
-    
-        ofxOscSender sender;
+        
+
     
     
         //OSC reveice and final crop pro8l
         void getHumanFromOSC();
-        void drawParts();
-        void drawConnectionsOF();
+
         
-        ofxOscReceiver receiver;
         
-        // This array will hold the results parsed from the OSC message string
-        ofxJSONElement results;
-        // This array will hold all the humans detected
-        ofxJSONElement humans;
-        
-        vector<vector<string>> connections;;
-    
-        //serial
-        ofSerial serial;
-        int baud = 9600;
 
 
-	private:
+
+		/* serial */		
+		ofSerial serial;
+		int baud = 9600;
+		/* end of serial */
+
+
 		/* TCP networking */
 		const string hostIp = "127.0.0.1";
 		const int hostPort = 27156;
@@ -117,5 +107,74 @@ class ofApp : public ofBaseApp{
 
 		void setupTcpClient();
 		void receiveTcpMsg();
+		void processJsonResponse();
 		/* end of TCP networking */
+
+
+		/* json */
+		const map<unsigned int, string> POSE_BODY_25_BODY_PARTS {
+			{ 0,  "Nose" },
+			{ 1,  "Neck" },
+			{ 2,  "RShoulder" },
+			{ 3,  "RElbow" },
+			{ 4,  "RWrist" },
+			{ 5,  "LShoulder" },
+			{ 6,  "LElbow" },
+			{ 7,  "LWrist" },
+			{ 8,  "MidHip" },
+			{ 9,  "RHip" },
+			{ 10, "RKnee" },
+			{ 11, "RAnkle" },
+			{ 12, "LHip" },
+			{ 13, "LKnee" },
+			{ 14, "LAnkle" },
+			{ 15, "REye" },
+			{ 16, "LEye" },
+			{ 17, "REar" },
+			{ 18, "LEar" },
+			{ 19, "LBigToe" },
+			{ 20, "LSmallToe" },
+			{ 21, "LHeel" },
+			{ 22, "RBigToe" },
+			{ 23, "RSmallToe" },
+			{ 24, "RHeel" },
+			{ 25, "Background" }
+		};
+		// This array will hold the results parsed from the OSC message string
+		ofxJSONElement jsonResults;
+		ofxJSONElement people;
+		/* end of json */
+
+
+		/* images */
+		ofImage rawPhoto;
+		ofImage cropPhoto;
+		ofImage optPhoto;
+		/* end of images */
+
+
+		/* draw */
+		// Skeleton Tracking part
+		vector<vector<string>> bodyPartConnections = {
+			{ "Nose", "LEye" },
+			{ "LEye", "LEar" },
+			{ "Nose", "REye" },
+			{ "REye", "REar" },
+			{ "Nose", "Neck" },
+			{ "Neck", "RShoulder" },
+			{ "Neck", "LShoulder" },
+			{ "RShoulder", "RElbow" },
+			{ "RElbow", "RWrist" },
+			{ "LShoulder", "LElbow" },
+			{ "LElbow", "LWrist" },
+			{ "Neck", "RHip" },
+			{ "RHip", "RKnee" },
+			{ "RKnee", "RAnkle" },
+			{ "Neck", "LHip" },
+			{ "LHip", "LKnee" },
+			{ "LKnee", "LAnkle" }
+		};
+		void drawBodyParts();
+		void drawBodyPartConnections();
+		/* end of draw */
 };
