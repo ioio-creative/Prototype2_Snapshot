@@ -1,13 +1,22 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ofxOsc.h"
 #include "ofxJSON.h"
 #include "ofxNetwork.h"
 
 //==============================
+
+/* app */
+#define isLogToConsole true
+#define isSilentLog false
+#define frameRate 60
+/* end of app */
+
+/* cameras and image manipulation */
 #define totalCamera 5
 #define totalBtn 18
+#define btnPerCam 6
+
 #define camDeviceA 0
 #define camDeviceB 1
 #define camDeviceC 4
@@ -15,33 +24,72 @@
 
 #define camW 1920
 #define camH 1080
-#define windowW 960
-#define windowH 540
-#define btnPerCam 6
 
-#define cropW 1920
-#define cropH 880
+#define firstTrimW 1920
+#define firstTrimH 880
+#define firstTrimWHalf (firstTrimW/2)
+#define firstTrimHHalf (firstTrimH/2)
+
+#define croppedImgW 500
+#define croppedImgWHalf (croppedImgW/2)
+ 
+#define imageExt ".jpg"
+#define imageInputDirUnderData "input_images/"
+#define croppedImageFileSuffix "_cropped"
+
+//#define leftBodyPartRef "LHip"
+#define leftBodyPartRef "LEye"
+//#define rightBodyPartRef "RHip"
+#define rightBodyPartRef "REye"
+/* end of cameras and image manipulation */
+
+
+/* main window */
+#define firstTrimImgWInWindow (firstTrimW/2)
+#define windowW (firstTrimImgWInWindow+croppedImgWHalf)
+#define windowH firstTrimHHalf
+/* end of main window */
+
+/* serial */
+#define isReadFromSerial false
+#define baud 9600
+/* end of serial */
+
+/* tcp */
+#define hostIp "127.0.0.1"
+#define hostPort 27156
+#define tcpMsgDelimiter "[TCP]"
+#define reconnectTimeMillis 5000
+/* end of tcp */
+
+/* json */
+#define isPrettifyJson true
+#define jsonExt ".json"
+#define jsonOutputDirUnderData "output_jsons/"
+/* end of json */
 
 //==============================
-
-
-#define RECEIVE_PORT 3334
-#define NUM_MSG_STRINGS 20
-
-
-#define HOST "localhost"
-#define SEND_PORT 12000
 
 
 class ofApp : public ofBaseApp{
 
 	private:
+		/* ofx life cycle hooks */
 		void setup();
 		void update();
 		void draw();
-
+		/* end of ofx life cycle hooks */
+		
+		/* ofx events */
 		void keyPressed(int key);
+		/* end of ofx events */
+
+		/* main window */
+		int backgroundRgba[4] = {0, 0, 0, 1};
+		/* end of main window */
     
+		/* cameras and image manipulation */
+
         // TriggerEvent
         // Once Triggered,
         // grab photo from camera[cameraID]
@@ -57,8 +105,7 @@ class ofApp : public ofBaseApp{
         
         // optPhoto TriggerEvent
         // Once Updated,
-        // Display
-        
+        // Display        
         //cameras array
         ofVideoGrabber cameras[totalCamera];
         
@@ -67,38 +114,24 @@ class ofApp : public ofBaseApp{
 		int btnToCam[totalBtn] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 		//int btnToCam[totalBtn] = { 0,0,0,0,0,1,1,1,1,3,3,3,3,3,4,4,4,4 };
 	    //int btnToCam2[36]={camDeviceD,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceD,camDeviceD,camDeviceD,camDeviceD,camDeviceD,camDeviceD,camDeviceD};
-        //int btnToCam[totalBtn] ;
         
         //Dimension array [buttonID] = {startPoint0, StartPoint1,...,startPoint17}
         //btnToStartPoint[] = {0,320,640,960,1280,1600,0,320,640,960,1280,1600,0,320,640,960,1280,1600}
         int btnToStartPoint[totalBtn] = {0,1200,1000,800,600,400,200,320,640,960,1280,1600,0,320,640,960,1280,1600};
-        
-    
-        int leftBorder, rightBorder;
-        
 
-    
-    
-        //OSC reveice and final crop pro8l
-        void getHumanFromOSC();
+		ofImage rawImg;
+		ofImage firstTrimImg;
+		ofImage croppedImg;
+			
+		void cropCentreImageByBodyParts();
 
-        
-        
-
-
+		/* end of cameras and image manipulation */
 
 		/* serial */		
 		ofSerial serial;
-		int baud = 9600;
 		/* end of serial */
 
-
-		/* TCP networking */
-		const string hostIp = "127.0.0.1";
-		const int hostPort = 27156;
-		const string tcpMsgDelimiter = "[TCP]";
-		const int reconnectTimeMillis = 5000;
-
+		/* tcp */
 		ofxTCPClient tcpClient;		
 		int connectTime = 0;
 		int deltaTime = 0;
@@ -106,10 +139,8 @@ class ofApp : public ofBaseApp{
 		bool isWaitingForReply = false;
 
 		void setupTcpClient();
-		void receiveTcpMsg();
-		void processJsonResponse();
-		/* end of TCP networking */
-
+		void receiveTcpMsg();		
+		/* end of tcp */
 
 		/* json */
 		const map<unsigned int, string> POSE_BODY_25_BODY_PARTS {
@@ -141,17 +172,9 @@ class ofApp : public ofBaseApp{
 			{ 25, "Background" }
 		};
 		// This array will hold the results parsed from the OSC message string
-		ofxJSONElement jsonResults;
 		ofxJSONElement people;
+		void saveJson();
 		/* end of json */
-
-
-		/* images */
-		ofImage rawPhoto;
-		ofImage cropPhoto;
-		ofImage optPhoto;
-		/* end of images */
-
 
 		/* draw */
 		// Skeleton Tracking part
@@ -174,6 +197,7 @@ class ofApp : public ofBaseApp{
 			{ "LHip", "LKnee" },
 			{ "LKnee", "LAnkle" }
 		};
+		bool isInputImageCropped = true;
 		void drawBodyParts();
 		void drawBodyPartConnections();
 		/* end of draw */

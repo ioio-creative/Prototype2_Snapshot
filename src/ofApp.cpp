@@ -1,48 +1,48 @@
 #include "ofApp.h"
 
 //--------------------------------------------------------------
-void ofApp::setup(){
-	ofSetFrameRate(60);
-    ofSetBackgroundColor(0);
+void ofApp::setup() {	
+	ofSetFrameRate(frameRate);
+	ofSetBackgroundColor(backgroundRgba[0], backgroundRgba[1], backgroundRgba[2], backgroundRgba[3]);
 	ofSetVerticalSync(true);
+
+	if (isLogToConsole) {
+		ofLogToConsole();
+	}
+
+	if (isSilentLog) {
+		ofSetLogLevel(OF_LOG_SILENT);
+	}
     
-    //setupCamera
+    // setupCamera
     vector<ofVideoDevice> devices = cameras[0].listDevices();
-    //cout << devices.size() << endl; 
-    for(int i = 0; i < devices.size(); i++){
-        if(devices[i].bAvailable){
-            ofLogNotice() << devices[i].id << ": " << devices[i].deviceName;
+	ofLog() << "Number of devices: " << devices.size();
+    for (int i = 0; i < devices.size(); i++) {
+        if (devices[i].bAvailable) {
+			ofLog() << devices[i].id << ": " << devices[i].deviceName;
             cameras[i].setDeviceID(i);
-            cameras[i].initGrabber(camW,camH);
-            
-        }else{
-            ofLogNotice() << devices[i].id << ": " << devices[i].deviceName << " - unavailable ";
+            cameras[i].initGrabber(camW, camH);            
+        } else {
+			ofLog() << devices[i].id << ": " << devices[i].deviceName << " - unavailable";
         }
     }
     
-    
-    //setup button to camera ID
-    //int camID = -1;
-    for(int i = 0; i < totalBtn; i++){
-    //    if(i % btnPerCam == 0){
-    //      camID ++;
-    // }
+    // setup button to camera ID
+    // int camID = -1;
+    for (int i = 0; i < totalBtn; i++) {
+        /*if (i % btnPerCam == 0) {
+          camID++;
+		}*/
         //btnToCam[i] = camID;
-        cout << "Button "<< i+1 << "is going to Camera No." <<btnToCam[i] << endl ;        
+		ofLog() << "Button "<< i + 1 << "is going to Camera No. " << btnToCam[i];
     }
-    
-    
-    
-    rawPhoto.allocate(1920, 1080, OF_IMAGE_COLOR);
-    
-    
-    
-    
-    
+
+    rawImg.allocate(camW, camH, OF_IMAGE_COLOR);
+
     /* serial set up */    
 	serial.listDevices();
     vector<ofSerialDeviceInfo> deviceList = serial.getDeviceList();
-    serial.setup( 0 , baud );
+    serial.setup(0 , baud);
 	/* end of serial set up */
 
 
@@ -53,258 +53,171 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
-//    getHumanFromOSC();
-  
-    int myByte = 0;
-    if(serial.available()){
-        myByte = serial.readByte();
-//        if ( myByte == OF_SERIAL_NO_DATA )
-//            printf("no data was read");
-//        else if ( myByte == OF_SERIAL_ERROR )
-//            printf("an error occurred");
-//        else
-            //printf("myByte is %d \n", myByte);
-      
-        if(myByte <= 36) {
-            int TempBtnID = (myByte+1)/2 ;
-           // int TempBtnID = (myByte);
-            //printf("TempBtn is %d \n", TempBtnID);
-          //  flrBtnPressed(0);
-          //  flrBtnPressed(myByte);
+	/* serial */
+	if (isReadFromSerial) {
+		int myByte = 0;
+		if (serial.available()) {
+			myByte = serial.readByte();
 
-			/* Useful */
-            flrBtnPressed(TempBtnID);
+			string msgToLog = "";
+			if (myByte == OF_SERIAL_NO_DATA)
+				msgToLog = "no data was read";
+			else if (myByte == OF_SERIAL_ERROR)
+				msgToLog = "an error occurred";
+			else
+				msgToLog = "myByte is " + myByte;
+			ofLog() << msgToLog;
 
-            //supposedly you should call flrBtnPressed(btnID)
-            
-            //int TempBtnID =
-            //flnBtnPressed(
-        }
-    }
-
+			if (myByte <= 36) {
+				// int TempBtnID = (myByte);
+				int TempBtnID = (myByte + 1) / 2;				
+				ofLog() << "TempBtn is " << TempBtnID;
+			   
+				/* Useful */
+				// flrBtnPressed(0);
+				// flrBtnPressed(myByte);
+				flrBtnPressed(TempBtnID);
+			}
+		}
+	}
+	/* end of serial */
 
 	/* tcp */
-
 	if (tcpClient.isConnected()) {
-		//cout << "Remarks: TCP connected!" << endl;
-
+		//ofLog() << "TCP connected!";
 		if (isWaitingForReply) {
 			receiveTcpMsg();
 		}
 	}
-	else {
-		deltaTime = ofGetElapsedTimeMillis() - connectTime;
-		
+	else {  // reconnect if not connected
+		//ofLog() << "TCP disconnected!";
+		deltaTime = ofGetElapsedTimeMillis() - connectTime;		
 		if (deltaTime > reconnectTimeMillis) {
 			setupTcpClient();
-
 			connectTime = ofGetElapsedTimeMillis();
 		}
 	}
-
 	/* end of tcp */
+
+
+	/* cropping input image by body part data learnt from OpenPose */
+	if (!isInputImageCropped) {
+		cropCentreImageByBodyParts();
+		isInputImageCropped = true;
+	}
+	/* end of cropping input image by body part data learnt from OpenPose */
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {    
-    /*if(cropPhoto.isAllocated()){
-        cropPhoto.draw(10,10);
-    }
+	if (croppedImg.isAllocated()) {
+        croppedImg.draw(firstTrimImgWInWindow, 0, croppedImgWHalf, windowH);
+    }    
 
-	if(optPhoto.isAllocated()){
-        optPhoto.draw(10, 10, 500, 880);      
-    }*/    
-
-	//cout << "People length: " << people.size() << endl;
-
+	//ofLog() << "People length: " << people.size();
 	if (people.size() != 0) {
-		rawPhoto.draw(0, 0, windowW, windowH);
+		firstTrimImg.draw(0, 0, firstTrimImgWInWindow, windowH);
 		drawBodyParts();
 		drawBodyPartConnections();
 	}    
 }
 
+//--------------------------------------------------------------
+void ofApp::keyPressed(int key) {
+	// https://stackoverflow.com/questions/628761/convert-a-character-digit-to-the-corresponding-integer-in-c
+	flrBtnPressed(key - '0');
+}
+
+
+/* cameras and image manipulation */
+
 // TriggerEvent
 // Once Triggered,
 // grab photo from camera[cameraID]
 // CropA
-void ofApp::flrBtnPressed(int btnID){
-    
+void ofApp::flrBtnPressed(int btnID) { 
     //grab image from the designated camera according to button
     int camID = btnToCam[btnID];
     cameras[camID].update();
-    ofLog() << camID;
-    cout << "Current pressed Btn: "<< btnID << "- is going to Camera No." <<camID << endl ;
-    rawPhoto.setFromPixels(cameras[camID].getPixels());
+    ofLog() << "Cam id: " << camID;
+	ofLog() << "Current pressed Btn: "<< btnID << "- is going to Camera No." << camID;
+    rawImg.setFromPixels(cameras[camID].getPixels());
     
-    //first crop
-    int cropStartX = btnToStartPoint[btnID];
-    int cropStartY = 0;
-    //rawPhoto.crop(cropStartX,cropStartY,cropW,cropH);
-    //cropPhoto.cropFrom(rawPhoto,cropStartX,cropStartY,cropW,cropH);
-    cropPhoto.cropFrom(rawPhoto,0,0,cropW,cropH);
-    
-    //cropPhoto
-    //suppose at the end of here I plug the cropPhoto into the openPos function
-    //openPose(cropPhoto);
-    //1. save to a particular location
-    //string path = "/Users/chunhoiwong_ioio/Documents/OpenFramework X/of_v0.10.0_osx_release/apps/myApps/Prototype2/prototype-2/bin/data/nodeGetImage/public/";
-	
-	string pathUnderData = "input_images/";
+    //first trim
+    int trimStartX = btnToStartPoint[btnID];
+    int trimStartY = 0;
+    firstTrimImg.cropFrom(rawImg, trimStartX, trimStartY, firstTrimW, firstTrimH);
+  
+    if (flag < totalBtn) {
+		//suppose at the end of here I plug the cropPhoto into the openPose function
+		//openPose(cropPhoto);
+		//save to a particular location
+		string pathUnderData = imageInputDirUnderData + ofToString(flag) + imageExt;
+		firstTrimImg.save(ofToDataPath(pathUnderData));
 
-    if (flag < 18) {
-		pathUnderData += ofToString(flag) + ".jpg";
-        cropPhoto.save(ofToDataPath(pathUnderData));
-
-		string imgRelativePath = ofToDataPath(pathUnderData);
-		
+		string imgRelativePath = ofToDataPath(pathUnderData);		
 		ofFile imgFile(imgRelativePath);
-		string imgAbsolutePath = imgFile.getAbsolutePath();
-        
-		cout << "Image captured: " << imgAbsolutePath << endl;
-		
-
-
-		/* osc */
-
-        /*ofxOscMessage m;
-        m.setAddress("/test");
-        m.addIntArg(flag);
-        sender.sendMessage(m, true);*/
-        
-		/* end of osc */
-
+		string imgAbsolutePath = imgFile.getAbsolutePath();        
+		ofLog() << "Image captured: " << imgAbsolutePath;
 
 		/* tcp */
 
 		//setupTcpClient();
 		if (tcpClient.isConnected()) {
-			cout << "Remarks: TCP connected!" << endl;
+			ofLog() << "Remarks: TCP connected!";
 			tcpClient.send(imgAbsolutePath);
-			cout << "Sent: " << imgAbsolutePath << endl;
+			ofLog() << "Sent: " << imgAbsolutePath;
 			isWaitingForReply = true;			
 		}
 		//tcpClient.close();
 
 		/* end of tcp */
 
-
-
 		flag++;
-		if (flag == 18) {
+		if (flag == totalBtn) {
 			flag = 0;
 		}
     }
-    
-       //web server got OSC m, read photo from location
-    
-    //suppose it will pass the photo to runway
-    //web server getSkeleton data JSON
-    //web server send OSC of skeletonJSON
-    
-    
-//OSC receive. Unpack JSON
-//look for left border and right border
 }
 
-void ofApp::getHumanFromOSC(){
-    // check for waiting messages
-    //while(receiver.hasWaitingMessages()){
-        ofLog() << "OSC got through" ;
-        // get the next message
-        ofxOscMessage m;
-        //receiver.getNextMessage(m);
-        
-        //probably  insert the EXPORT JSON part here
-        //============================================================
-        
-        
-        
-        //============================================================
+void ofApp::cropCentreImageByBodyParts() {  
+	int leftBorder, rightBorder;
+    float center = 0;
+    float leftX = 0;
+    float rightX = 0;
 
-       
-        // check message from nodeGetImage
-        if(m.getAddress() == "/ske"){
-            // both the arguments are int32's
-            float center = 0;
-            float leftX = 0;
-            float rightX = 0;
-            for(int i=0; i< m.getNumArgs();i+=3){
-                
-                //the received array format as ["bodyPartA","bodyPartA-X-Coor","bodyPartA-Y-Coor","bodyPartB",..............]
-                // and bodyPart coordinate is format as 0.0 - 1.0, 0.5 as the middle of the photo
-                if(m.getArgAsString(i) == "Left_Hip"){
-                    ofLog()<< m.getArgAsString(i);
-                    ofLog()<< m.getArgAsFloat(i+1);
-                    ofLog()<< m.getArgAsFloat(i+2);
-                    leftX = m.getArgAsFloat(i+1);
-                }else if (m.getArgAsString(i) == "Right_Hip"){
-                    ofLog()<< m.getArgAsString(i);
-                    ofLog()<< m.getArgAsFloat(i+1);
-                    ofLog()<< m.getArgAsFloat(i+2);
-                    rightX = m.getArgAsFloat(i+1);
-                }
-                
-                //print every argument's x coordinate
-                ofLog()<< m.getArgAsString(i) <<" 's X cordinate in Float" ;
-                ofLog()<< m.getArgAsFloat(i+1);
-                
+	ofxJSONElement firstPersonDetected = people[0];
+	ofxJSONElement leftBodyPart = firstPersonDetected[leftBodyPartRef];
+	ofxJSONElement rightBodyPart = firstPersonDetected[rightBodyPartRef];
 
+	leftX = leftBodyPart[0].asFloat();
+	rightX = rightBodyPart[0].asFloat();
+
+    if (leftX != 0 && rightX != 0) {
+        center = (leftX + rightX) * 0.5;
+    } else if (leftX == 0) {
+        center = rightX;
+    } else if (rightX == 0) {
+        center = leftX;
+    }
+
+    // croppedImgWHalf is just an arbituary number for the final photo size
+    leftBorder = center - croppedImgWHalf;
+    rightBorder = center + croppedImgWHalf;
+    ofLog() << "Crop result: ";
+    ofLog() << "min : " << leftBorder << "  max : "<< rightBorder;
     
-            }
-            if(leftX != 0 && rightX !=0){
-                center = (leftX + rightX)/2;
-            }else if(leftX == 0){
-                center = rightX;
-            }else if(rightX == 0){
-                center = leftX;
-            }
-            //translating 0.0 - 1.0 to pixel coordinate, 250 is just an arbituary number for the final photo size
-            leftBorder = center * cropW - 250;
-            rightBorder = center * cropW + 250;
-            //ofLog() << "min : " << minX << "  max : "<< maxX;
-            ofLog() << "min : " << leftBorder << "  max : "<< rightBorder;
-            //crop optimal photo for display
-            if(center != 0){
-                optPhoto.cropFrom(cropPhoto,leftBorder,0,rightBorder - leftBorder, cropPhoto.getHeight());
-                optPhoto.save(ofToString(ofGetElapsedTimef())+".jpg");
-            }else{
-                ofLog() << "Can't Find Center";
-            }
-        }else{
-            // unrecognized message: display on the bottom of the screen
-            string msg_string;
-            msg_string = m.getAddress();
-            msg_string += ": ";
-            for(int i = 0; i < m.getNumArgs(); i++){
-                // get the argument type
-                msg_string += m.getArgTypeName(i);
-                msg_string += ":";
-                // display the argument - make sure we get the right type
-                if(m.getArgType(i) == OFXOSC_TYPE_INT32){
-                    msg_string += ofToString(m.getArgAsInt32(i));
-                }
-                else if(m.getArgType(i) == OFXOSC_TYPE_FLOAT){
-                    msg_string += ofToString(m.getArgAsFloat(i));
-                }
-                else if(m.getArgType(i) == OFXOSC_TYPE_STRING){
-                    msg_string += m.getArgAsString(i);
-                }
-                else{
-                    msg_string += "unknown";
-                }
-            }
-           
-        }
-
-        
-        
+	// crop optimal photo for display
+    if (center != 0) {
+        croppedImg.cropFrom(firstTrimImg, leftBorder, 0, rightBorder - leftBorder, firstTrimImg.getHeight());
+		string pathUnderData = imageInputDirUnderData + ofToString(flag) + croppedImageFileSuffix + imageExt;
+		croppedImg.save(ofToDataPath(pathUnderData));
+    } else {
+        ofLog() << "Can't Find Center";
+    }
 }
 
-void ofApp::keyPressed(int key){
-	// https://stackoverflow.com/questions/628761/convert-a-character-digit-to-the-corresponding-integer-in-c
-	flrBtnPressed(key - '0');    
-}
+/* end of cameras and image manipulation */
 
 
 /* tcp */
@@ -318,10 +231,12 @@ void ofApp::receiveTcpMsg() {
 	string str = tcpClient.receive();
 	if (str.length() > 0) {
 		msgRx = str;
-		cout << "Received: " << msgRx << endl;
+		ofLog() << "Received: " << msgRx;				
 		isWaitingForReply = false;
+
+		saveJson();
 		
-		processJsonResponse();
+		isInputImageCropped = false;
 	}
 }
 
@@ -330,24 +245,24 @@ void ofApp::receiveTcpMsg() {
 
 /* json */
 
-void ofApp::processJsonResponse() {
+void ofApp::saveJson() {
 	// grab the data
 	string data = msgRx;
 
 	// parse it to JSON
-	jsonResults.clear();
+	ofxJSONElement jsonResults;
 	jsonResults.parse(data);
 	people = jsonResults["people"];
 
-	cout << "People length: " << people.size() << endl;
-	cout << "Flag: " << flag << endl;
+	ofLog() << "People length: " << people.size();
+	ofLog() << "Flag: " << flag;
 
-	/*cout << "Nose 1: " << jsonResults["people"][0]["Nose"][0].asString() << endl;
-	cout << "Nose 2: " << jsonResults["people"][0]["Nose"][1].asString() << endl;*/
+	/*ofLog()  << "Nose 1: " << jsonResults["people"][0]["Nose"][0].asString()
+	ofLog()  << "Nose 2: " << jsonResults["people"][0]["Nose"][1].asString()*/
 
 	// output json text file
-	string pathUnderData = "output_jsons/" + ofToString(flag) + ".json";;
-	jsonResults.save(pathUnderData, true);  // true means pretty
+	string pathUnderData = jsonOutputDirUnderData + ofToString(flag) + jsonExt;;
+	jsonResults.save(pathUnderData, isPrettifyJson);  // true means pretty
 }
 
 /* end of json */
@@ -372,7 +287,7 @@ void ofApp::drawBodyParts() {
 				continue;
 			}
 
-			ofDrawEllipse(x * windowW / camW, y * windowH / camH, 10, 10);
+			ofDrawEllipse(x * firstTrimImgWInWindow / firstTrimW, y * windowH / firstTrimH, 10, 10);
 		}
 	}
 }
@@ -385,25 +300,15 @@ void ofApp::drawBodyPartConnections() {
 		// connections start by looping through all body
 		// connections and matching only the ones we need.
 		for (int c = 0; c < bodyPartConnections.size(); c++) {
-			ofxJSONElement start;
-			ofxJSONElement end;
 			// Check if we have a pair in the current body parts
-			// TODO: double check bodyPartName == bodyPartConnections[c][0], maybe can optimize using dictionary, i.e. map
-			for (int b = 0; b < person.size(); b++) {
-				string bodyPartName = POSE_BODY_25_BODY_PARTS.at(b);
-				ofxJSONElement bodyPart = person[bodyPartName];				
-				if (bodyPartName == bodyPartConnections[c][0]) {
-					start = bodyPart;
-				}
-				else if (bodyPartName == bodyPartConnections[c][1]) {
-					end = bodyPart;
-				}
-			}
+			ofxJSONElement start = person[bodyPartConnections[c][0]];
+			ofxJSONElement end = person[bodyPartConnections[c][1]];
+
 			if (start.size() > 0 && end.size() > 0) {
-				float x1 = start[0].asFloat() * windowW / camW;
-				float y1 = start[1].asFloat() * windowH / camH;
-				float x2 = end[0].asFloat() * windowW / camW;
-				float y2 = end[1].asFloat() * windowH / camH;
+				float x1 = start[0].asFloat() * firstTrimImgWInWindow / firstTrimW;
+				float y1 = start[1].asFloat() * windowH / firstTrimH;
+				float x2 = end[0].asFloat() * firstTrimImgWInWindow / firstTrimW;
+				float y2 = end[1].asFloat() * windowH / firstTrimH;
 
 				if ((x1 == 0 && y1 == 0) || (x2 == 0 && y2 == 0)) {
 					continue;

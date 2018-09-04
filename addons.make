@@ -1,3 +1,2 @@
 ofxJSON
 ofxNetwork
-ofxOsc
