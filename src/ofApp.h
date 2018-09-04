@@ -36,11 +36,12 @@
 #define imageExt ".jpg"
 #define imageInputDirUnderData "input_images/"
 #define croppedImageFileSuffix "_cropped"
+#define isSaveCroppedImgToFile true
 
-//#define leftBodyPartRef "LHip"
-#define leftBodyPartRef "LEye"
-//#define rightBodyPartRef "RHip"
-#define rightBodyPartRef "REye"
+#define leftBodyPartRef "LHip"
+//#define leftBodyPartRef "LEye"
+#define rightBodyPartRef "RHip"
+//#define rightBodyPartRef "REye"
 /* end of cameras and image manipulation */
 
 
@@ -51,7 +52,7 @@
 /* end of main window */
 
 /* serial */
-#define isReadFromSerial false
+#define isReadFromSerial true
 #define baud 9600
 /* end of serial */
 
@@ -66,6 +67,7 @@
 #define isPrettifyJson true
 #define jsonExt ".json"
 #define jsonOutputDirUnderData "output_jsons/"
+#define isSaveJsonToFile true
 /* end of json */
 
 //==============================
@@ -111,7 +113,7 @@ class ofApp : public ofBaseApp{
         
         //buttons to Cam array [buttonID] i.e.{0,0,0,1,1,1,2,2,2}
         //int btnToCam[totalBtn] = {4,4,4,4,4,0,0,0,0,1,1,1,1,1,2,2,2,2};
-		int btnToCam[totalBtn] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+		int btnToCam[totalBtn] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 		//int btnToCam[totalBtn] = { 0,0,0,0,0,1,1,1,1,3,3,3,3,3,4,4,4,4 };
 	    //int btnToCam2[36]={camDeviceD,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceD,camDeviceD,camDeviceD,camDeviceD,camDeviceD,camDeviceD,camDeviceD};
         

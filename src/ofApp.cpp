@@ -109,14 +109,17 @@ void ofApp::update(){
 }
 
 //--------------------------------------------------------------
-void ofApp::draw() {    
+void ofApp::draw() {
 	if (croppedImg.isAllocated()) {
         croppedImg.draw(firstTrimImgWInWindow, 0, croppedImgWHalf, windowH);
-    }    
+    }
+
+	if (firstTrimImg.isAllocated()) {
+		firstTrimImg.draw(0, 0, firstTrimImgWInWindow, windowH);
+	}
 
 	//ofLog() << "People length: " << people.size();
-	if (people.size() != 0) {
-		firstTrimImg.draw(0, 0, firstTrimImgWInWindow, windowH);
+	if (people.size() != 0) {		
 		drawBodyParts();
 		drawBodyPartConnections();
 	}    
@@ -144,7 +147,8 @@ void ofApp::flrBtnPressed(int btnID) {
     rawImg.setFromPixels(cameras[camID].getPixels());
     
     //first trim
-    int trimStartX = btnToStartPoint[btnID];
+    //int trimStartX = btnToStartPoint[btnID];
+	int trimStartX = 0;
     int trimStartY = 0;
     firstTrimImg.cropFrom(rawImg, trimStartX, trimStartY, firstTrimW, firstTrimH);
   
@@ -167,7 +171,7 @@ void ofApp::flrBtnPressed(int btnID) {
 			ofLog() << "Remarks: TCP connected!";
 			tcpClient.send(imgAbsolutePath);
 			ofLog() << "Sent: " << imgAbsolutePath;
-			isWaitingForReply = true;			
+			isWaitingForReply = true;
 		}
 		//tcpClient.close();
 
@@ -193,27 +197,38 @@ void ofApp::cropCentreImageByBodyParts() {
 	leftX = leftBodyPart[0].asFloat();
 	rightX = rightBodyPart[0].asFloat();
 
-    if (leftX != 0 && rightX != 0) {
+    if (leftX > 0 && rightX > 0) {
         center = (leftX + rightX) * 0.5;
-    } else if (leftX == 0) {
-        center = rightX;
-    } else if (rightX == 0) {
-        center = leftX;
-    }
+	}
+	else {
+		// TODO:
+		ofLog() << "Can't Find Center: preliminary check";
+		return;
+	}
 
     // croppedImgWHalf is just an arbituary number for the final photo size
     leftBorder = center - croppedImgWHalf;
     rightBorder = center + croppedImgWHalf;
     ofLog() << "Crop result: ";
-    ofLog() << "min : " << leftBorder << "  max : "<< rightBorder;
+    ofLog() << "min: " << leftBorder << " max: "<< rightBorder;
     
 	// crop optimal photo for display
-    if (center != 0) {
+    if (center > 0 && leftBorder > 0) {
+		//ofLog() << "Crop begins";
         croppedImg.cropFrom(firstTrimImg, leftBorder, 0, rightBorder - leftBorder, firstTrimImg.getHeight());
-		string pathUnderData = imageInputDirUnderData + ofToString(flag) + croppedImageFileSuffix + imageExt;
-		croppedImg.save(ofToDataPath(pathUnderData));
+		if (isSaveCroppedImgToFile) {
+			//ofLog() << "Crop save starts";
+			int idx = flag - 1;
+			if (idx < 0) {
+				idx = totalBtn - 1;
+			}
+			string pathUnderData = imageInputDirUnderData + ofToString(idx) + croppedImageFileSuffix + imageExt;
+			croppedImg.save(ofToDataPath(pathUnderData));
+			//ofLog() << "Crop save ends";
+		}
+		//ofLog() << "Crop ends";
     } else {
-        ofLog() << "Can't Find Center";
+        ofLog() << "Can't Find Center: detail check";
     }
 }
 
@@ -234,7 +249,9 @@ void ofApp::receiveTcpMsg() {
 		ofLog() << "Received: " << msgRx;				
 		isWaitingForReply = false;
 
-		saveJson();
+		if (isSaveJsonToFile) {
+			saveJson();
+		}
 		
 		isInputImageCropped = false;
 	}
@@ -261,6 +278,10 @@ void ofApp::saveJson() {
 	ofLog()  << "Nose 2: " << jsonResults["people"][0]["Nose"][1].asString()*/
 
 	// output json text file
+	int idx = flag - 1;
+	if (idx < 0) {
+		idx = totalBtn - 1;
+	}
 	string pathUnderData = jsonOutputDirUnderData + ofToString(flag) + jsonExt;;
 	jsonResults.save(pathUnderData, isPrettifyJson);  // true means pretty
 }
