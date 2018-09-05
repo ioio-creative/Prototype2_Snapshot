@@ -8,7 +8,7 @@
 
 /* app */
 #define isLogToConsole true
-#define isSilentLog false
+#define isSilentLog true
 #define frameRate 60
 /* end of app */
 
@@ -113,7 +113,7 @@ class ofApp : public ofBaseApp{
         
         //buttons to Cam array [buttonID] i.e.{0,0,0,1,1,1,2,2,2}
         //int btnToCam[totalBtn] = {4,4,4,4,4,0,0,0,0,1,1,1,1,1,2,2,2,2};
-		int btnToCam[totalBtn] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+		int btnToCam[totalBtn] = {0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1};
 		//int btnToCam[totalBtn] = { 0,0,0,0,0,1,1,1,1,3,3,3,3,3,4,4,4,4 };
 	    //int btnToCam2[36]={camDeviceD,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceA,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceB,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceC,camDeviceD,camDeviceD,camDeviceD,camDeviceD,camDeviceD,camDeviceD,camDeviceD};
         
@@ -124,13 +124,17 @@ class ofApp : public ofBaseApp{
 		ofImage rawImg;
 		ofImage firstTrimImg;
 		ofImage croppedImg;
+
+		bool isFlagUpdated = true;
 			
 		void cropCentreImageByBodyParts();
+		void incrementFlag();
 
 		/* end of cameras and image manipulation */
 
 		/* serial */		
 		ofSerial serial;
+		void readByteFromSerial();
 		/* end of serial */
 
 		/* tcp */
@@ -141,7 +145,8 @@ class ofApp : public ofBaseApp{
 		bool isWaitingForReply = false;
 
 		void setupTcpClient();
-		void receiveTcpMsg();		
+		void receiveTcpMsg();
+		void reconnectIfTimeoutInUpdate();
 		/* end of tcp */
 
 		/* json */

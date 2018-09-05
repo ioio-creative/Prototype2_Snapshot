@@ -55,30 +55,7 @@ void ofApp::setup() {
 void ofApp::update(){
 	/* serial */
 	if (isReadFromSerial) {
-		int myByte = 0;
-		if (serial.available()) {
-			myByte = serial.readByte();
-
-			string msgToLog = "";
-			if (myByte == OF_SERIAL_NO_DATA)
-				msgToLog = "no data was read";
-			else if (myByte == OF_SERIAL_ERROR)
-				msgToLog = "an error occurred";
-			else
-				msgToLog = "myByte is " + myByte;
-			ofLog() << msgToLog;
-
-			if (myByte <= 36) {
-				// int TempBtnID = (myByte);
-				int TempBtnID = (myByte + 1) / 2;				
-				ofLog() << "TempBtn is " << TempBtnID;
-			   
-				/* Useful */
-				// flrBtnPressed(0);
-				// flrBtnPressed(myByte);
-				flrBtnPressed(TempBtnID);
-			}
-		}
+		readByteFromSerial();
 	}
 	/* end of serial */
 
@@ -89,14 +66,11 @@ void ofApp::update(){
 			receiveTcpMsg();
 		}
 	}
-	else {  // reconnect if not connected
+	else {
 		//ofLog() << "TCP disconnected!";
-		deltaTime = ofGetElapsedTimeMillis() - connectTime;		
-		if (deltaTime > reconnectTimeMillis) {
-			setupTcpClient();
-			connectTime = ofGetElapsedTimeMillis();
-		}
 	}
+
+	reconnectIfTimeoutInUpdate();
 	/* end of tcp */
 
 
@@ -106,6 +80,11 @@ void ofApp::update(){
 		isInputImageCropped = true;
 	}
 	/* end of cropping input image by body part data learnt from OpenPose */
+
+	if (!isFlagUpdated && !isWaitingForReply && isInputImageCropped) {
+		incrementFlag();
+		isFlagUpdated = true;
+	}
 }
 
 //--------------------------------------------------------------
@@ -143,7 +122,7 @@ void ofApp::flrBtnPressed(int btnID) {
     int camID = btnToCam[btnID];
     cameras[camID].update();
     ofLog() << "Cam id: " << camID;
-	ofLog() << "Current pressed Btn: "<< btnID << "- is going to Camera No." << camID;
+	ofLog() << "Current pressed Btn: " << btnID << "- is going to Camera No." << camID;
     rawImg.setFromPixels(cameras[camID].getPixels());
     
     //first trim
@@ -176,12 +155,9 @@ void ofApp::flrBtnPressed(int btnID) {
 		//tcpClient.close();
 
 		/* end of tcp */
-
-		flag++;
-		if (flag == totalBtn) {
-			flag = 0;
-		}
     }
+
+	isFlagUpdated = false;
 }
 
 void ofApp::cropCentreImageByBodyParts() {  
@@ -218,11 +194,7 @@ void ofApp::cropCentreImageByBodyParts() {
         croppedImg.cropFrom(firstTrimImg, leftBorder, 0, rightBorder - leftBorder, firstTrimImg.getHeight());
 		if (isSaveCroppedImgToFile) {
 			//ofLog() << "Crop save starts";
-			int idx = flag - 1;
-			if (idx < 0) {
-				idx = totalBtn - 1;
-			}
-			string pathUnderData = imageInputDirUnderData + ofToString(idx) + croppedImageFileSuffix + imageExt;
+			string pathUnderData = imageInputDirUnderData + ofToString(flag) + croppedImageFileSuffix + imageExt;
 			croppedImg.save(ofToDataPath(pathUnderData));
 			//ofLog() << "Crop save ends";
 		}
@@ -232,7 +204,46 @@ void ofApp::cropCentreImageByBodyParts() {
     }
 }
 
+void ofApp::incrementFlag() {
+	flag++;
+	if (flag == totalBtn) {
+		flag = 0;
+	}
+}
+
 /* end of cameras and image manipulation */
+
+
+/* serial */
+
+void ofApp::readByteFromSerial() {
+	int myByte = 0;
+	if (serial.available()) {
+		myByte = serial.readByte();
+
+		string msgToLog = "";
+		if (myByte == OF_SERIAL_NO_DATA)
+			msgToLog = "no data was read";
+		else if (myByte == OF_SERIAL_ERROR)
+			msgToLog = "an error occurred";
+		else
+			msgToLog = "myByte is " + myByte;
+		ofLog() << msgToLog;
+
+		if (myByte <= 36) {
+			// int TempBtnID = (myByte);
+			int TempBtnID = (myByte + 1) / 2;
+			ofLog() << "TempBtn is " << TempBtnID;
+
+			/* Useful */
+			// flrBtnPressed(0);
+			// flrBtnPressed(myByte);
+			flrBtnPressed(TempBtnID);
+		}
+	}
+}
+
+/* end of serial */
 
 
 /* tcp */
@@ -257,6 +268,16 @@ void ofApp::receiveTcpMsg() {
 	}
 }
 
+void ofApp::reconnectIfTimeoutInUpdate() {
+	if (!tcpClient.isConnected()) {		
+		deltaTime = ofGetElapsedTimeMillis() - connectTime;
+		if (deltaTime > reconnectTimeMillis) {
+			setupTcpClient();
+			connectTime = ofGetElapsedTimeMillis();
+		}
+	}
+}
+
 /* end of tcp */
 
 
@@ -278,10 +299,6 @@ void ofApp::saveJson() {
 	ofLog()  << "Nose 2: " << jsonResults["people"][0]["Nose"][1].asString()*/
 
 	// output json text file
-	int idx = flag - 1;
-	if (idx < 0) {
-		idx = totalBtn - 1;
-	}
 	string pathUnderData = jsonOutputDirUnderData + ofToString(flag) + jsonExt;;
 	jsonResults.save(pathUnderData, isPrettifyJson);  // true means pretty
 }
@@ -334,7 +351,7 @@ void ofApp::drawBodyPartConnections() {
 				if ((x1 == 0 && y1 == 0) || (x2 == 0 && y2 == 0)) {
 					continue;
 				}
-
+				//ofSetColor(255, 0, 0);
 				ofDrawLine(x1, y1, x2, y2);
 			}
 		}
