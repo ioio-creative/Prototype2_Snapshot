@@ -1,2 +1,4 @@
+ofxIO
 ofxJSON
 ofxNetwork
+ofxPoco

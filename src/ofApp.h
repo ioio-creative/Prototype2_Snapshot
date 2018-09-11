@@ -3,12 +3,13 @@
 #include "ofMain.h"
 #include "ofxJSON.h"
 #include "ofxNetwork.h"
+#include "ofxIO.h"
 
 //==============================
 
 /* app */
 #define isLogToConsole true
-#define isSilentLog true
+#define isSilentLog false
 #define frameRate 60
 /* end of app */
 
@@ -52,7 +53,7 @@
 /* end of main window */
 
 /* serial */
-#define isReadFromSerial true
+#define isReadFromSerial false
 #define baud 9600
 /* end of serial */
 
@@ -61,6 +62,7 @@
 #define hostPort 27156
 #define tcpMsgDelimiter "[TCP]"
 #define reconnectTimeMillis 5000
+#define recvWindBufSize 65536
 /* end of tcp */
 
 /* json */

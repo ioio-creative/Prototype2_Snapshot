@@ -143,13 +143,29 @@ void ofApp::flrBtnPressed(int btnID) {
 		string imgAbsolutePath = imgFile.getAbsolutePath();        
 		ofLog() << "Image captured: " << imgAbsolutePath;
 
+		/* base 64 encoding of image before sending via tcp */
+
+		// Create an empty ofxIO::ByteBuffer.
+		ofxIO::ByteBuffer buffer;
+
+		// Load the file contents into the buffer.
+		ofxIO::ByteBufferUtils::loadFromFile(imgRelativePath, buffer);
+
+		// Base64 encode the images's bytes.
+		//
+		// Additional encoding option include URL-safety, chunking and padding.
+		string base64Buffer = ofxIO::Base64Encoding::encode(buffer);
+
+		/* end of base 64 encoding of image before sending via tcp */
+
 		/* tcp */
 
 		//setupTcpClient();
 		if (tcpClient.isConnected()) {
 			ofLog() << "Remarks: TCP connected!";
-			tcpClient.send(imgAbsolutePath);
-			ofLog() << "Sent: " << imgAbsolutePath;
+			tcpClient.send(base64Buffer);
+			ofLog() << "String length of data sent: " << base64Buffer.length();
+			//ofLog() << "Sent: " << base64Buffer;
 			isWaitingForReply = true;
 		}
 		//tcpClient.close();
