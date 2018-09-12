@@ -19,10 +19,15 @@
 #define TotalTrigger 36
 #define btnPerCam 6
 
-#define camDeviceA 1
-#define camDeviceB 2
-#define camDeviceC 4
+#define camDeviceA 0
+#define camDeviceB 0
+#define camDeviceC 0
 #define camDeviceD 0
+
+//#define camDeviceA 1
+//#define camDeviceB 2
+//#define camDeviceC 4
+//#define camDeviceD 0
 
 #define camW 1920
 #define camH 1080
