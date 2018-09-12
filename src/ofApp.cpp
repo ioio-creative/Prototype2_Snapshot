@@ -72,13 +72,13 @@ void ofApp::update(){
 
 	/* tcp */
 	if (tcpClient.isConnected()) {
-		ofLog() << "TCP connected!";
+		//ofLog() << "TCP connected!";
 		if (isWaitingForReply) {
 			receiveTcpMsg();
 		}
 	}
 	else {
-		ofLog() << "TCP disconnected!";
+		//ofLog() << "TCP disconnected!";
 	}
 
 	reconnectIfTimeoutInUpdate();
