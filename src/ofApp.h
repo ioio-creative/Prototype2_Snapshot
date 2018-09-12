@@ -58,7 +58,8 @@
 /* end of serial */
 
 /* tcp */
-#define hostIp "127.0.0.1"
+//#define hostIp "127.0.0.1"
+#define hostIp "10.0.1.10"
 #define hostPort 27156
 #define tcpMsgDelimiter "[TCP]"
 #define reconnectTimeMillis 5000
