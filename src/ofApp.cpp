@@ -198,7 +198,7 @@ void ofApp::flrBtnPressed(int btnID) {
 		//setupTcpClient();
 		if (tcpClient.isConnected()) {
 			ofLog() << "Remarks: TCP connected!";
-			tcpClient.send(base64Buffer);
+			tcpClient.sendRaw.(base64Buffer);
 			ofLog() << "String length of data sent: " << base64Buffer.length();
 			//ofLog() << "Sent: " << base64Buffer;
 			isWaitingForReply = true;
