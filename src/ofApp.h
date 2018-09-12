@@ -39,10 +39,10 @@
 #define croppedImageFileSuffix "_cropped"
 #define isSaveCroppedImgToFile true
 
-#define leftBodyPartRef "LHip"
-//#define leftBodyPartRef "LEye"
-#define rightBodyPartRef "RHip"
-//#define rightBodyPartRef "REye"
+//#define leftBodyPartRef "LHip"
+#define leftBodyPartRef "LEye"
+//#define rightBodyPartRef "RHip"
+#define rightBodyPartRef "REye"
 /* end of cameras and image manipulation */
 
 
