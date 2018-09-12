@@ -198,6 +198,13 @@ class ofApp : public ofBaseApp{
 		void reconnectIfTimeoutInUpdate();
 		/* end of tcp */
 
+		/* tcp split send */
+		string totalBuffer;
+		size_t totalBufferLength = 0;
+		const int smallBufferLength = 65536;
+		size_t bufferLengthToBeSent = 0;
+		/* end of tcp split send */
+
 		/* json */
 		const map<unsigned int, string> POSE_BODY_25_BODY_PARTS {
 			{ 0,  "Nose" },

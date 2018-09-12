@@ -84,6 +84,31 @@ void ofApp::update(){
 	reconnectIfTimeoutInUpdate();
 	/* end of tcp */
 
+	/* tcp split send */
+	if (bufferLengthToBeSent > 0) {
+		ofLog() << "Buffer length to be sent: " << bufferLengthToBeSent;
+
+		bool isSuccess = false;
+
+		if (bufferLengthToBeSent <= smallBufferLength) {
+			isSuccess = tcpClient.send(totalBuffer.substr(totalBufferLength - bufferLengthToBeSent, smallBufferLength));
+			if (isSuccess) {
+				bufferLengthToBeSent = 0;
+				isWaitingForReply = true;
+			}
+		}
+		else {
+			isSuccess = tcpClient.sendRaw(totalBuffer.substr(totalBufferLength - bufferLengthToBeSent, smallBufferLength));
+			if (isSuccess) {
+				bufferLengthToBeSent -= smallBufferLength;
+			}
+		}
+
+		if (!isSuccess) {
+			// TODO: error handling			
+		}
+	}
+	/* end of tcp split send */
 
 	/* cropping input image by body part data learnt from OpenPose */
 	if (!isInputImageCropped) {
@@ -198,10 +223,13 @@ void ofApp::flrBtnPressed(int btnID) {
 		//setupTcpClient();
 		if (tcpClient.isConnected()) {
 			ofLog() << "Remarks: TCP connected!";
-			tcpClient.send(base64Buffer);
+			//tcpClient.send(base64Buffer);
+			//isWaitingForReply = true;
+			totalBuffer = base64Buffer;
+			totalBufferLength = base64Buffer.length();
+			bufferLengthToBeSent = totalBufferLength;
 			ofLog() << "String length of data sent: " << base64Buffer.length();
-			//ofLog() << "Sent: " << base64Buffer;
-			isWaitingForReply = true;
+			//ofLog() << "Sent: " << base64Buffer;			
 		}
 		//tcpClient.close();
 
