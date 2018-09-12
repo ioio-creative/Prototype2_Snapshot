@@ -201,7 +201,7 @@ class ofApp : public ofBaseApp{
 		/* tcp split send */
 		string totalBuffer;
 		size_t totalBufferLength = 0;
-		const int smallBufferLength = 65536;
+		const int smallBufferLength = 524288;
 		size_t bufferLengthToBeSent = 0;
 		/* end of tcp split send */
 

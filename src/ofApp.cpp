@@ -64,6 +64,11 @@ void ofApp::setup() {
 
 //--------------------------------------------------------------
 void ofApp::update(){
+	// TODO: should I update video grabber every frame?
+	int camID = ButtonTriggerToCam[0];
+	cameras[camID].update();
+
+
 	/* serial */
 	if (isReadFromSerial) {
 		readByteFromSerial();
