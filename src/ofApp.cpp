@@ -94,16 +94,17 @@ void ofApp::update(){
 		ofLog() << "Buffer length to be sent: " << bufferLengthToBeSent;
 
 		bool isSuccess = false;
+		string payloadToSendThisTime = totalBuffer.substr(totalBufferLength - bufferLengthToBeSent, smallBufferLength);
 
 		if (bufferLengthToBeSent <= smallBufferLength) {
-			isSuccess = tcpClient.send(totalBuffer.substr(totalBufferLength - bufferLengthToBeSent, smallBufferLength));
+			isSuccess = tcpClient.send(payloadToSendThisTime);
 			if (isSuccess) {
 				bufferLengthToBeSent = 0;
 				isWaitingForReply = true;
 			}
 		}
 		else {
-			isSuccess = tcpClient.sendRaw(totalBuffer.substr(totalBufferLength - bufferLengthToBeSent, smallBufferLength));
+			isSuccess = tcpClient.sendRaw(payloadToSendThisTime);
 			if (isSuccess) {
 				bufferLengthToBeSent -= smallBufferLength;
 			}
@@ -181,67 +182,69 @@ void ofApp::keyPressed(int key) {
 // Once Triggered,
 // grab photo from camera[cameraID]
 // CropA
-void ofApp::flrBtnPressed(int btnID) { 
-    //grab image from the designated camera according to button
-    //int camID = btnToCam[btnID];
-    int camID = ButtonTriggerToCam[btnID];
-    cameras[camID].update();
-    ofLog() << "Cam id: " << camID;
-	ofLog() << "Current pressed Btn: " << btnID << "- is going to Camera No." << camID;
-    rawImg.setFromPixels(cameras[camID].getPixels());
-    
-    //first trim
-    //int trimStartX = btnToStartPoint[btnID];
-	int trimStartX = 0;
-    int trimStartY = 0;
-    firstTrimImg.cropFrom(rawImg, trimStartX, trimStartY, firstTrimW, firstTrimH);
-  
-    if (flag < flagMAX) {
-		//suppose at the end of here I plug the cropPhoto into the openPose function
-		//openPose(cropPhoto);
-		//save to a particular location
-		string pathUnderData = imageInputDirUnderData + ofToString(flag) + imageExt;
-		firstTrimImg.save(ofToDataPath(pathUnderData));
+void ofApp::flrBtnPressed(int btnID) {
+	if (bufferLengthToBeSent == 0) {
+		//grab image from the designated camera according to button
+		//int camID = btnToCam[btnID];
+		int camID = ButtonTriggerToCam[btnID];
+		cameras[camID].update();
+		ofLog() << "Cam id: " << camID;
+		ofLog() << "Current pressed Btn: " << btnID << "- is going to Camera No." << camID;
+		rawImg.setFromPixels(cameras[camID].getPixels());
 
-		string imgRelativePath = ofToDataPath(pathUnderData);		
-		ofFile imgFile(imgRelativePath);
-		string imgAbsolutePath = imgFile.getAbsolutePath();        
-		ofLog() << "Image captured: " << imgAbsolutePath;
+		//first trim
+		//int trimStartX = btnToStartPoint[btnID];
+		int trimStartX = 0;
+		int trimStartY = 0;
+		firstTrimImg.cropFrom(rawImg, trimStartX, trimStartY, firstTrimW, firstTrimH);
 
-		/* base 64 encoding of image before sending via tcp */
+		if (flag < flagMAX) {
+			//suppose at the end of here I plug the cropPhoto into the openPose function
+			//openPose(cropPhoto);
+			//save to a particular location
+			string pathUnderData = imageInputDirUnderData + ofToString(flag) + imageExt;
+			firstTrimImg.save(ofToDataPath(pathUnderData));
 
-		// Create an empty ofxIO::ByteBuffer.
-		ofxIO::ByteBuffer buffer;
+			string imgRelativePath = ofToDataPath(pathUnderData);
+			ofFile imgFile(imgRelativePath);
+			string imgAbsolutePath = imgFile.getAbsolutePath();
+			ofLog() << "Image captured: " << imgAbsolutePath;
 
-		// Load the file contents into the buffer.
-		ofxIO::ByteBufferUtils::loadFromFile(imgRelativePath, buffer);
+			/* base 64 encoding of image before sending via tcp */
 
-		// Base64 encode the images's bytes.
-		//
-		// Additional encoding option include URL-safety, chunking and padding.
-		string base64Buffer = ofxIO::Base64Encoding::encode(buffer);
+			// Create an empty ofxIO::ByteBuffer.
+			ofxIO::ByteBuffer buffer;
 
-		/* end of base 64 encoding of image before sending via tcp */
+			// Load the file contents into the buffer.
+			ofxIO::ByteBufferUtils::loadFromFile(imgRelativePath, buffer);
 
-		/* tcp */
+			// Base64 encode the images's bytes.
+			//
+			// Additional encoding option include URL-safety, chunking and padding.
+			string base64Buffer = ofxIO::Base64Encoding::encode(buffer);
 
-		//setupTcpClient();
-		if (tcpClient.isConnected()) {
-			ofLog() << "Remarks: TCP connected!";
-			//tcpClient.send(base64Buffer);
-			//isWaitingForReply = true;
-			totalBuffer = base64Buffer;
-			totalBufferLength = base64Buffer.length();
-			bufferLengthToBeSent = totalBufferLength;
-			ofLog() << "String length of data sent: " << base64Buffer.length();
-			//ofLog() << "Sent: " << base64Buffer;			
+			/* end of base 64 encoding of image before sending via tcp */
+
+			/* tcp */
+
+			//setupTcpClient();
+			if (tcpClient.isConnected()) {
+				ofLog() << "Remarks: TCP connected!";
+				//tcpClient.send(base64Buffer);
+				//isWaitingForReply = true;
+				totalBuffer = base64Buffer;
+				totalBufferLength = base64Buffer.length();
+				bufferLengthToBeSent = totalBufferLength;
+				ofLog() << "String length of data sent: " << base64Buffer.length();
+				//ofLog() << "Sent: " << base64Buffer;			
+			}
+			//tcpClient.close();
+
+			/* end of tcp */
 		}
-		//tcpClient.close();
 
-		/* end of tcp */
-    }
-
-	isFlagUpdated = false;
+		isFlagUpdated = false;
+	}
 }
 
 void ofApp::cropCentreImageByBodyParts() {  
