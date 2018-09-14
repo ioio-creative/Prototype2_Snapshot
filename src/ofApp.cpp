@@ -4,8 +4,7 @@
 void ofApp::setup() {	
 	ofSetFrameRate(frameRate);
     ofSetBackgroundAuto(true);
-	//ofSetBackgroundColor(backgroundRgba[0], backgroundRgba[1], backgroundRgba[2], backgroundRgba[3]);
-    ofBackground(0, 0, 0);
+	ofSetBackgroundColor(backgroundRgba[0], backgroundRgba[1], backgroundRgba[2], backgroundRgba[3]);    
 	ofSetVerticalSync(true);
 
 	if (isLogToConsole) {
@@ -65,6 +64,7 @@ void ofApp::setup() {
 //--------------------------------------------------------------
 void ofApp::update(){
 	// TODO: should I update video grabber every frame?
+	// need to update all the video grabbers as well, not just one
 	int camID = ButtonTriggerToCam[0];
 	cameras[camID].update();
 
@@ -90,30 +90,7 @@ void ofApp::update(){
 	/* end of tcp */
 
 	/* tcp split send */
-	if (bufferLengthToBeSent > 0) {
-		ofLog() << "Buffer length to be sent: " << bufferLengthToBeSent;
-
-		bool isSuccess = false;
-		string payloadToSendThisTime = totalBuffer.substr(totalBufferLength - bufferLengthToBeSent, smallBufferLength);
-
-		if (bufferLengthToBeSent <= smallBufferLength) {
-			isSuccess = tcpClient.send(payloadToSendThisTime);
-			if (isSuccess) {
-				bufferLengthToBeSent = 0;
-				isWaitingForReply = true;
-			}
-		}
-		else {
-			isSuccess = tcpClient.sendRaw(payloadToSendThisTime);
-			if (isSuccess) {
-				bufferLengthToBeSent -= smallBufferLength;
-			}
-		}
-
-		if (!isSuccess) {
-			// TODO: error handling			
-		}
-	}
+	sendTcpMsgInPiecesIfMsgInFlight();
 	/* end of tcp split send */
 
 	/* cropping input image by body part data learnt from OpenPose */
@@ -371,6 +348,38 @@ void ofApp::reconnectIfTimeoutInUpdate() {
 }
 
 /* end of tcp */
+
+
+/* tcp split send */
+
+void ofApp::sendTcpMsgInPiecesIfMsgInFlight() {
+	if (tcpClient.isConnected() && bufferLengthToBeSent > 0) {
+		ofLog() << "Buffer length to be sent: " << bufferLengthToBeSent;
+
+		bool isSuccess = false;
+		string payloadToSendThisTime = totalBuffer.substr(totalBufferLength - bufferLengthToBeSent, smallBufferLength);
+
+		if (bufferLengthToBeSent <= smallBufferLength) {
+			isSuccess = tcpClient.send(payloadToSendThisTime);
+			if (isSuccess) {
+				bufferLengthToBeSent = 0;
+				isWaitingForReply = true;
+			}
+		}
+		else {
+			isSuccess = tcpClient.sendRaw(payloadToSendThisTime);
+			if (isSuccess) {
+				bufferLengthToBeSent -= smallBufferLength;
+			}
+		}
+
+		if (!isSuccess) {
+			// TODO: error handling			
+		}
+	}
+}
+
+/* end of tcp split send */
 
 
 /* json */

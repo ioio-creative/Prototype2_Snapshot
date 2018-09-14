@@ -73,6 +73,10 @@
 #define recvWindBufSize 65536
 /* end of tcp */
 
+/* tcp split send */
+#define smallBufferLength 524288
+/* end of tcp split send */
+
 /* json */
 #define isPrettifyJson true
 #define jsonExt ".json"
@@ -200,9 +204,9 @@ class ofApp : public ofBaseApp{
 
 		/* tcp split send */
 		string totalBuffer;
-		size_t totalBufferLength = 0;
-		const int smallBufferLength = 524288;
+		size_t totalBufferLength = 0;		
 		size_t bufferLengthToBeSent = 0;
+		void sendTcpMsgInPiecesIfMsgInFlight();
 		/* end of tcp split send */
 
 		/* json */
