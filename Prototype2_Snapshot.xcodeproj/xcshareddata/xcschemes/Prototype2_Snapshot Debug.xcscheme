@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-               BuildableName = "proto2_combined_JULY17.app"
-               BlueprintName = "proto2_combined_JULY17"
-               ReferencedContainer = "container:proto2_combined_JULY17.xcodeproj">
+               BuildableName = "Prototype2_Snapshot.app"
+               BlueprintName = "Prototype2_Snapshot"
+               ReferencedContainer = "container:Prototype2_Snapshot.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-            BuildableName = "proto2_combined_JULY17.app"
-            BlueprintName = "proto2_combined_JULY17"
-            ReferencedContainer = "container:proto2_combined_JULY17.xcodeproj">
+            BuildableName = "Prototype2_Snapshot.app"
+            BlueprintName = "Prototype2_Snapshot"
+            ReferencedContainer = "container:Prototype2_Snapshot.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </TestAction>
@@ -52,9 +52,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-            BuildableName = "proto2_combined_JULY17.app"
-            BlueprintName = "proto2_combined_JULY17"
-            ReferencedContainer = "container:proto2_combined_JULY17.xcodeproj">
+            BuildableName = "Prototype2_Snapshot.app"
+            BlueprintName = "Prototype2_Snapshot"
+            ReferencedContainer = "container:Prototype2_Snapshot.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>
@@ -70,9 +70,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-            BuildableName = "proto2_combined_JULY17.app"
-            BlueprintName = "proto2_combined_JULY17"
-            ReferencedContainer = "container:proto2_combined_JULY17.xcodeproj">
+            BuildableName = "Prototype2_Snapshot.app"
+            BlueprintName = "Prototype2_Snapshot"
+            ReferencedContainer = "container:Prototype2_Snapshot.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

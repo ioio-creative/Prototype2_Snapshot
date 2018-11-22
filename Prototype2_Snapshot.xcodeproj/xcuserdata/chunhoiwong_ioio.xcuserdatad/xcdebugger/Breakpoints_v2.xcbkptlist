@@ -6,17 +6,17 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "../../../../libs/openFrameworks/graphics/ofPixels.cpp"
-            timestampString = "556447989.340197"
+            filePath = "src/ofApp.h"
+            timestampString = "558442532.128844"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "9"
-            endingLineNumber = "9"
-            landmarkName = "getImageTypeFromChannels(size_t channels)"
-            landmarkType = "9">
+            startingLineNumber = "124"
+            endingLineNumber = "124"
+            landmarkName = "ofApp"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
