@@ -240,7 +240,8 @@ class ofApp : public ofBaseApp{
 		};
 		// This array will hold the results parsed from the OSC message string
 		ofxJSONElement people;
-		void saveJson();
+		ofxJSONElement ofApp::getPeopleFromJsonStr(string jsonStr);
+		void saveJson(ofxJSONElement jsonResults);
             void callJsonLocal(int);
             void callLastJsonLocal(int);
 		/* end of json */

@@ -329,8 +329,12 @@ void ofApp::receiveTcpMsg() {
 		ofLog() << "Received: " << msgRx;	\
 		isWaitingForReply = false;
 
+		people = getPeopleFromJsonStr(msgRx);
+
+		ofLog() << "People length: " << people.size();
+
 		if (isSaveJsonToFile) {
-			saveJson();
+			saveJson(people);
 		}
 		
 		isInputImageCropped = false;
@@ -384,16 +388,14 @@ void ofApp::sendTcpMsgInPiecesIfMsgInFlight() {
 
 /* json */
 
-void ofApp::saveJson() {
-	// grab the data
-	string data = msgRx;
-
+ofxJSONElement ofApp::getPeopleFromJsonStr(string jsonStr) {
 	// parse it to JSON
 	ofxJSONElement jsonResults;
-	jsonResults.parse(data);
-	people = jsonResults["people"];
+	jsonResults.parse(jsonStr);
+	return jsonResults["people"];
+}
 
-	ofLog() << "People length: " << people.size();
+void ofApp::saveJson(ofxJSONElement jsonResults) {
 	ofLog() << "Flag: " << flag;
 
 	/*ofLog()  << "Nose 1: " << jsonResults["people"][0]["Nose"][0].asString()
