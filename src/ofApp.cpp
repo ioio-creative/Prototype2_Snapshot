@@ -647,7 +647,7 @@ void ofApp::drawAnimationBodyPartLocus() {
         float x2 = body_part_pre[0].asFloat()* firstTrimImgWInWindow / firstTrimW;
         float y2 = body_part_pre[1].asFloat()* firstTrimImgWInWindow / firstTrimW;
         
-        if ((x1 == 0 && y1 == 0) || (x2 == 0 && y2 == 0)) {
+        if ((x1 == 0 || y1 == 0) || (x2 == 0 || y2 == 0)) {
             continue;
         }
         ofSetLineWidth(0.1);
